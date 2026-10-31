@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
+}
+
+val signingPropsFile = rootProject.file("keystore.properties")
+val signingProps = Properties().apply {
+    if (signingPropsFile.exists()) {
+        signingPropsFile.inputStream().use { load(it) }
+    }
 }
 
 android {
@@ -13,11 +22,25 @@ android {
         applicationId = "ru.scalejournal"
         minSdk = 26
         targetSdk = 34
-        versionCode = 13
-        versionName = "1.4.2"
+        versionCode = 14
+        versionName = "1.4.3"
+    }
+
+    signingConfigs {
+        if (signingPropsFile.exists()) {
+            create("journal") {
+                storeFile = rootProject.file(signingProps.getProperty("storeFile"))
+                storePassword = signingProps.getProperty("storePassword")
+                keyAlias = signingProps.getProperty("keyAlias")
+                keyPassword = signingProps.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.findByName("journal")
+        }
         release {
             isMinifyEnabled = false
         }
